@@ -25,17 +25,14 @@ public class GitContributorsClient extends BaseClient {
 		
 		try {
 			response = executeRequest(url, handler);
-		} catch (IOException e) {
-			if (e instanceof HttpResponseException) {
-				HttpResponseException ex = (HttpResponseException) e;
-				if (ex.getStatusCode() == 202) {
-					response = request(url);
-				} else {
-					System.out.println("An error ocurred when gathering the contributors data from GitHub: " + ex.getStatusCode());
-				}
+		} catch (HttpResponseException e) {
+			if (e.getStatusCode() == 202) {
+				response = request(url);
 			} else {
-				System.out.println("An error ocurred when gathering the contributors data from GitHub!");
+				System.out.println("An error ocurred when gathering the contributors data from GitHub: " + e.getStatusCode());
 			}
+		} catch (IOException e) {
+			System.out.println("An error ocurred when gathering the contributors data from GitHub!");
 		}
 		
 		return response;

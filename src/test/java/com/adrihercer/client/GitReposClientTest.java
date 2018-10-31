@@ -57,7 +57,7 @@ public class GitReposClientTest {
 	}
 	
 	@Test
-	public void test_GitHubResponse_NoSuccessful() throws ClientProtocolException, IOException {
+	public void test_GitHubResponse_NoSuccessful_BadRequest() throws ClientProtocolException, IOException {
 		
 		CloseableHttpResponse httpResponse = spy(mock(CloseableHttpResponse.class));
 		CloseableHttpClient httpClient = new CloseableHttpClientTest(httpResponse);
@@ -68,7 +68,33 @@ public class GitReposClientTest {
 		doReturn(httpClient).when(gitReposClient).getHttpClient();
 		doReturn(statusLine).when(httpResponse).getStatusLine();
 		doReturn(httpEntity).when(httpResponse).getEntity();
-		doReturn(202).when(statusLine).getStatusCode();
+		doReturn(400).when(statusLine).getStatusCode();
+		
+		OutputStream os = new ByteArrayOutputStream();
+		PrintStream ps = new PrintStream(os);
+		System.setOut(ps);
+		
+		gitReposClient.setOAuthToken("testtoken%$#");
+		Repository[] repositories = gitReposClient.request("testurl");
+		
+		assertEquals("", "The provided username seems to be malformed!" + System.getProperty("line.separator"), os.toString());
+		
+		System.setOut(System.out);
+	}
+	
+	@Test
+	public void test_GitHubResponse_NoSuccessful_NotFound() throws ClientProtocolException, IOException {
+		
+		CloseableHttpResponse httpResponse = spy(mock(CloseableHttpResponse.class));
+		CloseableHttpClient httpClient = new CloseableHttpClientTest(httpResponse);
+		StatusLine statusLine = mock(StatusLine.class);
+		HttpEntity httpEntity = mock(HttpEntity.class);
+		GitReposClient gitReposClient = spy(new GitReposClient());
+		
+		doReturn(httpClient).when(gitReposClient).getHttpClient();
+		doReturn(statusLine).when(httpResponse).getStatusLine();
+		doReturn(httpEntity).when(httpResponse).getEntity();
+		doReturn(404).when(statusLine).getStatusCode();
 		
 		OutputStream os = new ByteArrayOutputStream();
 		PrintStream ps = new PrintStream(os);
@@ -77,7 +103,7 @@ public class GitReposClientTest {
 		gitReposClient.setOAuthToken("testtoken1234567890");
 		Repository[] repositories = gitReposClient.request("testurl");
 		
-		assertEquals("", "An error ocurred when gathering the repositories data from GitHub!" + System.getProperty("line.separator"), os.toString());
+		assertEquals("", "The provided username has not been found on GitHub!" + System.getProperty("line.separator"), os.toString());
 		
 		System.setOut(System.out);
 	}
